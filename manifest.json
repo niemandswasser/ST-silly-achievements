@@ -1,0 +1,12 @@
+{
+    "display_name": "ST-silly-achievements",
+    "loading_order": 80,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Codex + niemandswasser",
+    "version": "1.0.0",
+    "homePage": "https://github.com/niemandswasser/ST-silly-achievements",
+    "auto_update": false
+}
