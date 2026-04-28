@@ -44,6 +44,7 @@ const UI_TEXT = {
         enforce_local_cooldown: 'Локально ограничивать частоту наград',
         dedupe_exact: 'Не выдавать точные дубликаты',
         show_toasts: 'Показывать Steam-like уведомления',
+        show_floating_button: 'Показывать плавающую кнопку',
         prompt_for_injection: 'Промпт для инжекта',
         negative_prompt_for_cooldown: 'Негативный промпт (во время кулдауна)',
         debug: 'Отладка',
@@ -122,6 +123,7 @@ const UI_TEXT = {
         enforce_local_cooldown: 'Enforce local reward cooldown',
         dedupe_exact: 'Do not issue exact duplicates',
         show_toasts: 'Show Steam-like notifications',
+        show_floating_button: 'Show floating button',
         prompt_for_injection: 'Prompt for injection',
         negative_prompt_for_cooldown: 'Negative prompt (during cooldown)',
         debug: 'Debug',
@@ -234,6 +236,7 @@ const defaultSettings = {
     enforceLocalCooldown: true,
     dedupeByName: true,
     showToasts: true,
+    showFloatingButton: true,
     toastRarityGlow: true,
     toastCorner: 'top_right',
     toastPreset: 'steam_compact',
@@ -879,6 +882,13 @@ function refreshFloatingCount() {
     countEl.textContent = String(getAchievements().length);
 }
 
+function updateFloatingButtonVisibility() {
+    const fab = document.getElementById('stsa_fab');
+    if (!fab) return;
+    const settings = getSettings();
+    fab.style.display = settings.showFloatingButton ? '' : 'none';
+}
+
 function renderModalList() {
     const listEl = document.getElementById('stsa_modal_list');
     const statsEl = document.getElementById('stsa_modal_stats');
@@ -1274,6 +1284,7 @@ function ensureFloatingButton() {
     const y = Number.isFinite(settings.fabY) ? settings.fabY : def.y;
     applyFabPosition(fab, x, y);
     enableFabDragging(fab);
+    updateFloatingButtonVisibility();
 
     window.addEventListener('resize', () => {
         applyFabPosition(fab, parseInt(fab.style.left, 10) || def.x, parseInt(fab.style.top, 10) || def.y);
@@ -1313,6 +1324,10 @@ function buildSettingsHtml() {
                     <label class="checkbox_label">
                         <input type="checkbox" id="stsa_toasts">
                         <span>${escapeHtml(uiText('show_toasts'))}</span>
+                    </label>
+                    <label class="checkbox_label">
+                        <input type="checkbox" id="stsa_show_floating_button">
+                        <span>${escapeHtml(uiText('show_floating_button'))}</span>
                     </label>
                     <label>${escapeHtml(uiText('prompt_for_injection'))}
                         <textarea id="stsa_prompt" class="text_pole" rows="14"></textarea>
@@ -1589,6 +1604,7 @@ function renderSettings() {
     $('#stsa_enforce_local_cooldown').prop('checked', settings.enforceLocalCooldown);
     $('#stsa_dedupe').prop('checked', settings.dedupeByName);
     $('#stsa_toasts').prop('checked', settings.showToasts);
+    $('#stsa_show_floating_button').prop('checked', settings.showFloatingButton);
     $('#stsa_toast_glow').prop('checked', settings.toastRarityGlow);
     $('#stsa_toast_corner').val(settings.toastCorner);
     $('#stsa_toast_preset').val(settings.toastPreset);
@@ -1650,6 +1666,11 @@ function renderSettings() {
     $('#stsa_toasts').on('change', function() {
         settings.showToasts = Boolean($(this).prop('checked'));
         saveSettings();
+    });
+    $('#stsa_show_floating_button').on('change', function() {
+        settings.showFloatingButton = Boolean($(this).prop('checked'));
+        saveSettings();
+        updateFloatingButtonVisibility();
     });
     $('#stsa_toast_glow').on('change', function() {
         settings.toastRarityGlow = Boolean($(this).prop('checked'));
