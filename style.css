@@ -1,4 +1,4 @@
-#stsa_root .stsa_settings {
+﻿#stsa_root .stsa_settings {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -63,10 +63,73 @@
     grid-column: 1 / -1;
 }
 
+#stsa_prepared_panel .stsa_debug_grid {
+    display: grid;
+    grid-template-columns: minmax(70px, 80px) 1fr;
+    gap: 6px;
+}
+
+#stsa_prepared_panel #stsa_prepared_desc,
+#stsa_prepared_panel #stsa_prepared_rarity {
+    grid-column: 1 / -1;
+}
+
 #stsa_root .stsa_debug_actions {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+#stsa_root .stsa_debug_status {
+    margin: 0;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 0.82em;
+    line-height: 1.35;
+    white-space: pre-wrap;
+}
+
+#stsa_root .stsa_external_fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#stsa_root .stsa_external_row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#stsa_root .stsa_external_row .text_pole {
+    flex: 1;
+    min-width: 0;
+}
+
+#stsa_root .stsa_external_status {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 0.9em;
+    color: #ccc;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+#stsa_root .stsa_external_status.is-ok {
+    color: #7fd98a;
+    border-color: rgba(127, 217, 138, 0.35);
+}
+
+#stsa_root .stsa_external_status.is-warning {
+    color: #f0cc7a;
+    border-color: rgba(240, 204, 122, 0.35);
+}
+
+#stsa_root .stsa_external_status.is-error {
+    color: #f48787;
+    border-color: rgba(244, 135, 135, 0.35);
 }
 
 #stsa_root .stsa_preset_grid {
@@ -94,6 +157,26 @@
 
 #stsa_root .stsa_section_header:hover {
     background: rgba(255, 255, 255, 0.08);
+}
+
+#stsa_root .stsa_section:not(.stsa_section_collapsed) .stsa_section_header {
+    background: rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#stsa_root .stsa_section[data-section="mode_prompts"] #stsa_mode_prompt_template {
+    min-height: 260px;
+    resize: vertical;
+}
+
+#stsa_root .stsa_section[data-section="advanced"] textarea {
+    min-height: 160px;
+    resize: vertical;
+}
+
+#stsa_root .stsa_section[data-section="notifications"] .stsa_section_body,
+#stsa_root .stsa_section[data-section="core"] .stsa_section_body {
+    gap: 10px;
 }
 
 #stsa_root .stsa_section_chevron {
@@ -240,6 +323,71 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+#stsa_prepared_panel .stsa_modal_body {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#stsa_prepared_panel .stsa_modal_stats {
+    padding: 0;
+    border-bottom: 0;
+}
+
+#stsa_prepared_panel .stsa_modal_list {
+    padding: 0;
+    min-height: 120px;
+}
+
+#stsa_prepared_panel .text_pole,
+#stsa_prepared_panel textarea.text_pole,
+#stsa_prepared_panel input.text_pole,
+#stsa_prepared_panel select.text_pole {
+    color: var(--SmartThemeBodyColor, #d6dbe7) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+#stsa_prepared_panel .text_pole::placeholder {
+    color: rgba(214, 219, 231, 0.58) !important;
+}
+
+#stsa_prepared_panel .menu_button {
+    color: var(--SmartThemeBodyColor, #d6dbe7) !important;
+}
+
+#stsa_prepared_panel .stsa_prepared_generate_summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--SmartThemeBodyColor, #d6dbe7);
+    list-style: none;
+}
+
+#stsa_prepared_panel .stsa_prepared_generate_summary::-webkit-details-marker {
+    display: none;
+}
+
+#stsa_prepared_panel .stsa_prepared_generate_summary::before {
+    content: '\25B8';
+    display: inline-block;
+    margin-right: 6px;
+    transition: transform 0.15s ease;
+}
+
+#stsa_prepared_panel #stsa_prepared_generate_details[open] .stsa_prepared_generate_summary::before {
+    transform: rotate(90deg);
+}
+
+#stsa_prepared_panel .stsa_prepared_generate_body {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .stsa_panel.stsa_panel_open {
@@ -454,7 +602,7 @@
 }
 
 .stsa_toast_icon_wrap::before {
-    content: '★';
+    content: 'в…';
     position: absolute;
     top: 4px;
     left: 6px;
@@ -672,4 +820,10 @@
     .stsa_toast_desc {
         font-size: 0.8em;
     }
+}
+
+
+
+#stsa_root .stsa_hidden_legacy {
+    display: none !important;
 }
