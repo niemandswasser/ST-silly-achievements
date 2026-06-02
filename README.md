@@ -4,6 +4,7 @@
 
 # ST Silly Achievements
 [ENG README HERE](https://github.com/niemandswasser/ST-silly-achievements/blob/main/README-en.md)
+
 Расширение для [SillyTavern](https://github.com/SillyTavern/SillyTavern), которое добавляет систему ачивок в стиле Steam прямо в ваши чаты. ИИ сам решает, когда наградить вас за яркий момент в ролеплее - неожиданный поворот сюжета, удачную реплику, героический поступок или эпический фейл.
 
 ## Как это работает
