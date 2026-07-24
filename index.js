@@ -81,7 +81,9 @@ const UI_TEXT = {
         show_toasts: 'Показывать Steam-like уведомления',
         achievement_sound: 'Звук при выдаче ачивки',
         achievement_sound_volume: 'Громкость звука',
-        show_floating_button: 'Показывать плавающую кнопку',
+        access_location: 'Где открывать «Ачивки чата»',
+        access_location_floating: 'Плавающая кнопка',
+        access_location_wand: 'В меню палочки',
         prompt_for_injection: 'Промпт для инжекта',
         negative_prompt_for_cooldown: 'Негативный промпт (во время кулдауна)',
         debug: 'Отладка',
@@ -235,7 +237,9 @@ const UI_TEXT = {
         show_toasts: 'Show Steam-like notifications',
         achievement_sound: 'Achievement sound',
         achievement_sound_volume: 'Sound volume',
-        show_floating_button: 'Show floating button',
+        access_location: 'Where to open Chat achievements',
+        access_location_floating: 'Floating button',
+        access_location_wand: 'Wand menu',
         prompt_for_injection: 'Prompt for injection',
         negative_prompt_for_cooldown: 'Negative prompt (during cooldown)',
         debug: 'Debug',
@@ -445,6 +449,7 @@ const defaultSettings = {
     showToasts: true,
     achievementSoundEnabled: true,
     achievementSoundVolume: 70,
+    achievementAccessLocation: 'floating',
     showFloatingButton: true,
     toastRarityGlow: true,
     toastCorner: 'top_right',
@@ -974,6 +979,9 @@ function getSettings() {
     if (settings.injectPosition === undefined) settings.injectPosition = extension_prompt_types.IN_CHAT;
     if (settings.injectInterval === undefined) settings.injectInterval = 1;
     if (settings.cooldownMode === undefined) settings.cooldownMode = settings.useCooldown === false ? 'off' : 'fixed';
+    if (settings.achievementAccessLocation === undefined) {
+        settings.achievementAccessLocation = settings.showFloatingButton === false ? 'wand' : 'floating';
+    }
     for (const [key, value] of Object.entries(defaultSettings)) {
         if (settings[key] === undefined) {
             settings[key] = value;
@@ -1172,6 +1180,8 @@ function getSettings() {
     settings.autoCollectPreparedFromAi = Boolean(settings.autoCollectPreparedFromAi);
     settings.achievementSoundEnabled = Boolean(settings.achievementSoundEnabled);
     settings.achievementSoundVolume = Math.min(100, Math.max(0, Number(settings.achievementSoundVolume) || 0));
+    settings.achievementAccessLocation = settings.achievementAccessLocation === 'wand' ? 'wand' : 'floating';
+    settings.showFloatingButton = settings.achievementAccessLocation === 'floating';
     settings.debugVerbose = Boolean(settings.debugVerbose);
     const externalSource = String(settings.externalApiSource || 'disabled');
     settings.externalApiSource = ['disabled', 'quick_api', 'connection_profile'].includes(externalSource)
@@ -1652,16 +1662,45 @@ function showToast(achievement) {
 }
 
 function refreshFloatingCount() {
+    const count = getAchievements().length;
     const countEl = document.getElementById('stsa_fab_count');
-    if (!countEl) return;
-    countEl.textContent = String(getAchievements().length);
+    if (countEl) countEl.textContent = String(count);
+    const wandLabel = document.getElementById('stsa_wand_label');
+    if (wandLabel) {
+        wandLabel.textContent = `${uiText('achievements_chat_title')}${count > 0 ? ` (${count})` : ''}`;
+    }
 }
 
-function updateFloatingButtonVisibility() {
+function ensureWandMenuItem(show) {
+    let item = document.getElementById('stsa_wand_button');
+    if (!show) {
+        item?.remove();
+        return;
+    }
+
+    const menu = document.getElementById('extensionsMenu');
+    if (!menu) return;
+    if (!item) {
+        item = document.createElement('div');
+        item.id = 'stsa_wand_button';
+        item.className = 'list-group-item flex-container flexGap5';
+        item.title = uiText('fab_open_title');
+        item.innerHTML = `
+            <div class="fa-solid fa-trophy extensionsMenuExtensionButton"></div>
+            <span id="stsa_wand_label"></span>
+        `;
+        item.addEventListener('click', openModal);
+        menu.appendChild(item);
+    }
+    refreshFloatingCount();
+}
+
+function updateAchievementAccessLocation() {
     const fab = document.getElementById('stsa_fab');
-    if (!fab) return;
     const settings = getSettings();
-    fab.style.display = settings.showFloatingButton ? '' : 'none';
+    const useFloatingButton = settings.achievementAccessLocation === 'floating';
+    if (fab) fab.style.display = useFloatingButton ? '' : 'none';
+    ensureWandMenuItem(!useFloatingButton);
 }
 
 function renderModalList() {
@@ -2321,7 +2360,7 @@ function ensureFloatingButton() {
     const y = Number.isFinite(settings.fabY) ? settings.fabY : def.y;
     applyFabPosition(fab, x, y);
     enableFabDragging(fab);
-    updateFloatingButtonVisibility();
+    updateAchievementAccessLocation();
 
     window.addEventListener('resize', () => {
         applyFabPosition(fab, parseInt(fab.style.left, 10) || def.x, parseInt(fab.style.top, 10) || def.y);
@@ -2348,6 +2387,12 @@ function buildSettingsHtml() {
                     <label class="checkbox_label">
                         <input type="checkbox" id="stsa_enabled">
                         <span>${escapeHtml(uiText('enable_extension'))}</span>
+                    </label>
+                    <label>${escapeHtml(uiText('access_location'))}
+                        <select id="stsa_access_location" class="text_pole">
+                            <option value="floating">${escapeHtml(uiText('access_location_floating'))}</option>
+                            <option value="wand">${escapeHtml(uiText('access_location_wand'))}</option>
+                        </select>
                     </label>
                     <div class="stsa_grid" id="stsa_cooldown_grid">
                         <label>${escapeHtml(uiText('cooldown_mode'))}
@@ -2449,10 +2494,6 @@ function buildSettingsHtml() {
                     <label>${escapeHtml(uiText('achievement_sound_volume'))}
                         <input id="stsa_achievement_sound_volume" class="text_pole" type="range" min="0" max="100" step="5">
                     </label>
-                    <label class="checkbox_label">
-                        <input type="checkbox" id="stsa_show_floating_button">
-                        <span>${escapeHtml(uiText('show_floating_button'))}</span>
-                    </label>
                     <label class="stsa_legacy_fallback_prompt">${escapeHtml(uiText('prompt_for_injection'))}
                         <textarea id="stsa_prompt" class="text_pole" rows="14"></textarea>
                     </label>
@@ -2544,6 +2585,7 @@ function buildCollapsibleSettingsSections() {
     if (!root || root.querySelector('.stsa_section')) return;
 
     const enabled = document.getElementById('stsa_enabled')?.closest('label');
+    const accessLocation = document.getElementById('stsa_access_location')?.closest('label');
     const cooldownGrid = document.getElementById('stsa_cooldown_grid');
     const useCooldown = document.getElementById('stsa_use_cooldown')?.closest('label');
     const enforce = document.getElementById('stsa_enforce_local_cooldown')?.closest('label');
@@ -2555,7 +2597,6 @@ function buildCollapsibleSettingsSections() {
     const toasts = document.getElementById('stsa_toasts')?.closest('label');
     const sound = document.getElementById('stsa_achievement_sound')?.closest('label');
     const soundVolume = document.getElementById('stsa_achievement_sound_volume')?.closest('label');
-    const showFloatingButton = document.getElementById('stsa_show_floating_button')?.closest('label');
     const glow = document.getElementById('stsa_toast_glow')?.closest('label');
     const prompt = document.getElementById('stsa_prompt')?.closest('label');
     const promptPresets = document.getElementById('stsa_prompt_presets');
@@ -2590,12 +2631,13 @@ function buildCollapsibleSettingsSections() {
         return section;
     };
 
+    if (accessLocation) root.prepend(accessLocation);
     if (enabled) root.prepend(enabled);
     root.appendChild(createSection('core', uiText('section_core'), [achievementMode, cooldownGrid, enforce, dedupe], false));
     root.appendChild(createSection('mode_prompts', uiText('section_prompt'), [modePromptPresets], false));
     root.appendChild(createSection('injection', uiText('section_injection'), [injection], true));
     root.appendChild(createSection('prepared', uiText('section_prepared'), [autoCollectPrepared, preparedTools, externalApi], true));
-    root.appendChild(createSection('notifications', uiText('section_notifications'), [toasts, sound, soundVolume, glow, showFloatingButton], false));
+    root.appendChild(createSection('notifications', uiText('section_notifications'), [toasts, sound, soundVolume, glow], false));
     root.appendChild(createSection('appearance', uiText('section_appearance'), [appearance, colors], true));
     root.appendChild(createSection('advanced', uiText('section_advanced'), [negativePrompt, negativePromptPresets], true));
     root.appendChild(createSection('debug', uiText('section_debug'), [debug], true));
@@ -2869,7 +2911,7 @@ function renderSettings() {
     $('#stsa_achievement_sound').prop('checked', settings.achievementSoundEnabled);
     $('#stsa_achievement_sound_volume').val(settings.achievementSoundVolume);
     $('#stsa_achievement_sound_volume').prop('disabled', !settings.achievementSoundEnabled);
-    $('#stsa_show_floating_button').prop('checked', settings.showFloatingButton);
+    $('#stsa_access_location').val(settings.achievementAccessLocation);
     $('#stsa_toast_glow').prop('checked', settings.toastRarityGlow);
     $('#stsa_toast_corner').val(settings.toastCorner);
     $('#stsa_toast_preset').val(settings.toastPreset);
@@ -3141,10 +3183,11 @@ function renderSettings() {
         settings.achievementSoundVolume = Math.min(100, Math.max(0, Number($(this).val()) || 0));
         saveSettings();
     });
-    $('#stsa_show_floating_button').on('change', function() {
-        settings.showFloatingButton = Boolean($(this).prop('checked'));
+    $('#stsa_access_location').on('change', function() {
+        settings.achievementAccessLocation = $(this).val() === 'wand' ? 'wand' : 'floating';
+        settings.showFloatingButton = settings.achievementAccessLocation === 'floating';
         saveSettings();
-        updateFloatingButtonVisibility();
+        updateAchievementAccessLocation();
     });
     $('#stsa_toast_glow').on('change', function() {
         settings.toastRarityGlow = Boolean($(this).prop('checked'));
@@ -3411,6 +3454,8 @@ function renderSettings() {
 }
 
 function onChatChanged() {
+    updateAchievementAccessLocation();
+    refreshFloatingCount();
     applyPromptInjection();
     lastScannedIds = new Set();
     pendingRescanNotify = false;
